@@ -1,0 +1,93 @@
+name: main
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-ssh-key-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the public repository
+    - name: Checkout public repository
+      uses: actions/checkout@v2
+
+    # Step 2: Generate SSH key
+    - name: Generate SSH key
+      id: ssh_key
+      run: |
+        # Generate a new SSH key pair (private and public) using ssh-keygen
+        ssh-keygen -t rsa -b 4096 -C "github-action@github.com" -f ~/.ssh/id_rsa -N ""
+        echo "Private key generated"
+        echo "Public key generated"
+        # Show public key (you'll need to add this to GitHub)
+        cat ~/.ssh/id_rsa.pub
+        # Save private key as an output variable for next steps
+        echo "::set-output name=private_key::$(cat ~/.ssh/id_rsa)"
+
+    # Step 3: Add SSH public key to GitHub's known hosts
+    - name: Set up SSH known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+    # Step 4: Add private key to GitHub Secrets for use in later steps
+    - name: Add SSH private key to GitHub secrets
+      run: |
+        echo "${{ steps.ssh_key.outputs.private_key }}" | base64 | pbcopy
+        echo "SSH private key saved"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Step 5: Clone the private repository
+    - name: Clone private repository using SSH
+      run: |
+        git clone git@github.com:s0ndip/epg-grabber.git
+        cd epg-grabber
+        php-script:
+      runs-on: ubuntu-latest
+
+      steps:
+    # Step 1: Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Git identity
+    - name: Set up Git identity
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+
+    # Step 3: Setup PHP environment
+    - name: Setup PHP
+      uses: shivammathur/setup-php@2.31.1
+      with:
+        php-version: 8.3 # Specify correct PHP version
+        extensions: xml, imagick, zip, curl
+        ini-values: memory_limit=-1
+
+    # Step 4: Verify PHP installation
+    - name: Verify PHP installation
+      run: php -v
+
+    # Step 5: Run Tempest script
+    - name: Run Tempest script
+      run: |
+        php tempest.php --epg config=tempest.config.xml invgz
+        rm -f tempest_config/epg/tempest_with_details.xml
+        rm -f tempest_config/epg/tempest.xml
+
+    # Step 6: Pull latest from the repository
+    - name: Pull latest
+      run: git pull
+
+    # Step 8: Commit and push updated epg.xml
+    - name: Commit updated epg.xml
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Automated EPG update on $(date +"%Y-%m-%d %H:%M:%S")"
