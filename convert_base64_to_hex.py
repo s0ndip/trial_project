@@ -22,7 +22,7 @@ output_m3u_file = 'output.m3u'  # Output M3U file path
 with open(input_m3u_file, 'r') as file:
     m3u_content = file.read()
 
-# Regular expression to match the Base64 keys
+# Regular expression to match the Base64 keys in the license_key field
 base64_regex = r'"k":"(.*?)"'
 
 # Find all Base64 keys in the M3U content
@@ -31,7 +31,7 @@ base64_keys = re.findall(base64_regex, m3u_content)
 # Convert Base64 keys to hexadecimal
 hex_keys = [base64_to_hex(key) for key in base64_keys]
 
-# Replace the Base64 keys with hexadecimal ones
+# Replace the Base64 keys with hexadecimal ones in the license_key section
 updated_m3u_content = m3u_content
 for base64_key, hex_key in zip(base64_keys, hex_keys):
     updated_m3u_content = updated_m3u_content.replace(base64_key, hex_key)
