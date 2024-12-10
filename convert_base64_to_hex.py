@@ -10,6 +10,11 @@ base64_keys = [
 hex_keys = []
 for base64_key in base64_keys:
     try:
+        # Fix padding if necessary
+        padding = len(base64_key) % 4
+        if padding != 0:
+            base64_key += "=" * (4 - padding)  # Add required padding
+
         # Decode from Base64 to bytes
         decoded_bytes = base64.b64decode(base64_key)
         # Convert bytes to hexadecimal
