@@ -34,7 +34,17 @@ hex_keys = [base64_to_hex(key) for key in base64_keys]
 # Replace the Base64 keys with hexadecimal ones in the license_key section
 updated_m3u_content = m3u_content
 for base64_key, hex_key in zip(base64_keys, hex_keys):
-    updated_m3u_content = updated_m3u_content.replace(base64_key, hex_key)
+    # Replace both 'k' and 'kid' values in the license_key section
+    updated_m3u_content = re.sub(
+        r'("k":"{}")'.format(re.escape(base64_key)),
+        r'"k":"{}",'.format(hex_key),
+        updated_m3u_content
+    )
+    updated_m3u_content = re.sub(
+        r'("kid":"{}")'.format(re.escape(base64_key)),
+        r'"kid":"{}",'.format(hex_key),
+        updated_m3u_content
+    )
 
 # Replace the license_key URL with the new format including the hexadecimal keys
 for i, (base64_key, hex_key) in enumerate(zip(base64_keys, hex_keys)):
