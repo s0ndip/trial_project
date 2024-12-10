@@ -35,7 +35,7 @@ jobs:
     - name: Pull latest
       run: git pull
 
-    - name: Commit hex_keys
+    - name: Commit output_m3u_file
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: "hex_keys"
+        commit_message: "output_m3u_file"
