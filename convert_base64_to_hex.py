@@ -1,50 +1,33 @@
 import base64
+import json
 import re
 
-# Function to convert Base64 to Hexadecimal
-def base64_to_hex(base64_key):
-    # Add padding if necessary
-    padding = len(base64_key) % 4
-    if padding != 0:
-        base64_key += "=" * (4 - padding)  # Add required padding
+def base64_to_hex(b64_string):
+    # Decode the Base64 string
+    raw_bytes = base64.b64decode(b64_string)
+    # Convert to hexadecimal
+    return raw_bytes.hex()
 
-    # Decode the Base64 string to bytes
-    decoded_bytes = base64.b64decode(base64_key)
-    # Convert the bytes to hexadecimal
-    hex_key = decoded_bytes.hex()
-    return hex_key
+def convert_keys_in_m3u(input_file_path, output_file_path):
+    with open(input_file_path, 'r') as file:
+        lines = file.readlines()
 
-# Path to input and output M3U files
-input_m3u_file = 'input.m3u'  # Change to your input M3U file path
-output_m3u_file = 'output.m3u'  # Output M3U file path
+    new_lines = []
+    for line in lines:
+        match = re.search(r'#KODIPROP:inputstream.adaptive.license_key=\{.*?\}', line)
+        if match:
+            json_string = match.group().split('=', 1)[1]
+            license_data = json.loads(json_string)
+            for key_info in license_data['keys']:
+                key_info['k'] = base64_to_hex(key_info['k'])
+                key_info['kid'] = base64_to_hex(key_info['kid'])
+            new_line = line.replace(json_string, json.dumps(license_data))
+            new_lines.append(new_line)
+        else:
+            new_lines.append(line)
 
-# Read the content of the input M3U file
-with open(input_m3u_file, 'r') as file:
-    m3u_content = file.read()
+    with open(output_file_path, 'w') as file:
+        file.writelines(new_lines)
 
-# Regular expression to match the Base64 keys in the license_key field
-base64_regex = r'"(k|kid)":"(.*?)"'
-
-# Find all Base64 keys in the M3U content (both k and kid fields)
-base64_keys = re.findall(base64_regex, m3u_content)
-
-# Convert Base64 keys to hexadecimal
-hex_keys = {key: base64_to_hex(value) for key, value in base64_keys}
-
-# Replace the Base64 keys with hexadecimal ones in the license_key section
-updated_m3u_content = m3u_content
-
-# Replace each Base64 key in 'k' and 'kid' fields with its hexadecimal equivalent
-for base64_key, base64_value in base64_keys:
-    hex_value = hex_keys.get(base64_key)  # Get the hexadecimal equivalent
-    updated_m3u_content = re.sub(
-        r'"{}":"{}"'.format(base64_key, base64_value),
-        '"{}":"{}"'.format(base64_key, hex_value),
-        updated_m3u_content
-    )
-
-# Write the updated content to the output M3U file
-with open(output_m3u_file, 'w') as file:
-    file.write(updated_m3u_content)
-
-print(f"Updated M3U content has been written to '{output_m3u_file}'")
+# Usage example
+convert_keys_in_m3u('input.m3u', 'output.m3u')
