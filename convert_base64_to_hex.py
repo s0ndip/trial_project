@@ -23,34 +23,23 @@ with open(input_m3u_file, 'r') as file:
     m3u_content = file.read()
 
 # Regular expression to match the Base64 keys in the license_key field
-base64_regex = r'"k":"(.*?)"'
+base64_regex = r'"(k|kid)":"(.*?)"'
 
-# Find all Base64 keys in the M3U content
+# Find all Base64 keys in the M3U content (both k and kid fields)
 base64_keys = re.findall(base64_regex, m3u_content)
 
 # Convert Base64 keys to hexadecimal
-hex_keys = [base64_to_hex(key) for key in base64_keys]
+hex_keys = {key: base64_to_hex(value) for key, value in base64_keys}
 
 # Replace the Base64 keys with hexadecimal ones in the license_key section
 updated_m3u_content = m3u_content
-for base64_key, hex_key in zip(base64_keys, hex_keys):
-    # Replace both 'k' and 'kid' values in the license_key section
-    updated_m3u_content = re.sub(
-        r'("k":"{}")'.format(re.escape(base64_key)),
-        r'"k":"{}",'.format(hex_key),
-        updated_m3u_content
-    )
-    updated_m3u_content = re.sub(
-        r'("kid":"{}")'.format(re.escape(base64_key)),
-        r'"kid":"{}",'.format(hex_key),
-        updated_m3u_content
-    )
 
-# Replace the license_key URL with the new format including the hexadecimal keys
-for i, (base64_key, hex_key) in enumerate(zip(base64_keys, hex_keys)):
-    updated_m3u_content = updated_m3u_content.replace(
-        f'{{ "keys":[ {{ "kty":"oct", "k":"{base64_key}", "kid":"{base64_key}" }} ], "type":"temporary" }}',
-        f'#KODIPROP:inputstream.adaptive.license_key=https://vercel-php-clearkey-hex-base64-json.vercel.app/api/results.php?keyid={hex_key}&key={hex_key}'
+# Replace each Base64 key in 'k' and 'kid' fields with its hexadecimal equivalent
+for base64_key, hex_key in hex_keys.items():
+    updated_m3u_content = re.sub(
+        r'"{}":"{}"'.format(base64_key, re.escape(hex_key)),
+        '"{}":"{}",'.format(base64_key, hex_key),
+        updated_m3u_content
     )
 
 # Write the updated content to the output M3U file
