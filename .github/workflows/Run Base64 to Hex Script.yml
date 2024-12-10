@@ -35,7 +35,7 @@ jobs:
     - name: Pull latest
       run: git pull
 
-    - name: Commit updated epg.xml
+    - name: Commit hex_keys
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: "Automated EPG update"
+        commit_message: "hex_keys"
