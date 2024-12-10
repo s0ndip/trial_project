@@ -17,12 +17,17 @@ def convert_keys_in_m3u(input_file_path, output_file_path):
         match = re.search(r'#KODIPROP:inputstream.adaptive.license_key=\{.*?\}', line)
         if match:
             json_string = match.group().split('=', 1)[1]
-            license_data = json.loads(json_string)
-            for key_info in license_data['keys']:
-                key_info['k'] = base64_to_hex(key_info['k'])
-                key_info['kid'] = base64_to_hex(key_info['kid'])
-            new_line = line.replace(json_string, json.dumps(license_data))
-            new_lines.append(new_line)
+            try:
+                license_data = json.loads(json_string)
+                for key_info in license_data['keys']:
+                    key_info['k'] = base64_to_hex(key_info['k'])
+                    key_info['kid'] = base64_to_hex(key_info['kid'])
+                new_line = line.replace(json_string, json.dumps(license_data))
+                new_lines.append(new_line)
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                print(f"Problematic JSON string: {json_string}")
+                new_lines.append(line)  # Keep the original line if there's an error
         else:
             new_lines.append(line)
 
