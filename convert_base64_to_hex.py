@@ -1,21 +1,17 @@
 import base64
 
-def base64_to_hex(b64_string):
-    # Decode the Base64 string
-    raw_bytes = base64.b64decode(b64_string)
-    # Convert to hexadecimal
-    return raw_bytes.hex()
+# Read the Base64 encoded data from input.txt
+with open('input.txt', 'r') as infile:
+    base64_data = infile.read().replace("\n", "")  # Remove any newline characters
 
-def convert_keys_file(input_file_path, output_file_path):
-    with open(input_file_path, 'r') as input_file:
-        base64_keys = input_file.readlines()
+# Decode the Base64 data
+decoded_data = base64.b64decode(base64_data)
 
-    with open(output_file_path, 'w') as output_file:
-        for key in base64_keys:
-            key = key.strip()
-            if key:  # Skip empty lines
-                hex_key = base64_to_hex(key)
-                output_file.write(f"{hex_key}\n")
+# Convert decoded data to hexadecimal
+hex_data = decoded_data.hex()
 
-# Usage example
-convert_keys_file('input.txt', 'output.m3u')
+# Write the hexadecimal output to output.txt
+with open('output.txt', 'w') as outfile:
+    outfile.write(hex_data)
+
+print("Conversion complete. Hex data written to output.txt")
