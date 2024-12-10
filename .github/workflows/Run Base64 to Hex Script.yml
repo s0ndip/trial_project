@@ -35,7 +35,7 @@ jobs:
     - name: Pull latest
       run: git pull
 
-    - name: Commit output_m3u_file
+    - name: Commit output_hex_file
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: "output_m3u_file"
+        commit_message: "Conversion complete. Hex data written to output.txt"
