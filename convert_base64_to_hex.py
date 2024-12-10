@@ -37,7 +37,7 @@ updated_m3u_content = m3u_content
 # Replace each Base64 key in 'k' and 'kid' fields with its hexadecimal equivalent
 for base64_key, hex_key in hex_keys.items():
     updated_m3u_content = re.sub(
-        r'"{}":"{}"'.format(base64_key, re.escape(hex_key)),
+        r'"{}":"{}"'.format(base64_key, re.escape(value)),
         '"{}":"{}",'.format(base64_key, hex_key),
         updated_m3u_content
     )
